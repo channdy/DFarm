@@ -75,8 +75,16 @@ class App(customtkinter.CTk):
         self.account_list_frame = customtkinter.CTkFrame(self.home_frame)
         self.account_list_frame.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
 
+        # self.scrollable_frame = customtkinter.CTkScrollableFrame(master=self.home_frame, width=200, height=200)
+        # self.scrollable_frame.grid(row=1, column=0, padx=20, pady=20)
+
+
         self.xy_frame = CTkXYFrame(self.home_frame)
-        self.xy_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.xy_frame.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
+
+        
+
+
 
         cursor = connection.cursor()
         rows = cursor.execute("SELECT * FROM device").fetchall()
@@ -89,7 +97,7 @@ class App(customtkinter.CTk):
             device_tbl_val.append(row)
             # print(row)
 
-        device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, hover=True)
+        device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, hover=True, command=self.selectCell, header_color="#2A8C55", hover_color="#B4B4B4", colors=["yellow", "green"])
         device_table.pack(expand=True, fill="both", padx=20, pady=20)
 
 
@@ -101,8 +109,11 @@ class App(customtkinter.CTk):
         acct_tbl_val = [
             ['No', 'User Name', 'User ID', 'Password', '2FA', 'Token', 'Cookie', 'Page', 'Status']
         ]
-        account_table = CTkTable(master=self.xy_frame, values=acct_tbl_val)
-        account_table.pack(expand=True, fill="both", padx=20, pady=20)
+        # account_table = CTkTable(master=self.scrollable_frame, values=acct_tbl_val)
+        # account_table.pack(expand=True, fill="both", padx=20, pady=20)
+
+        table = CTkTable(self.xy_frame, values=acct_tbl_val)
+        table.pack()
 
         # self.scrollable_frame = customtkinter.CTkScrollableFrame(self, label_text="CTkScrollableFrame")
         # self.scrollable_frame.grid(row=1, column=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
@@ -143,6 +154,16 @@ class App(customtkinter.CTk):
 
         # select default frame
         self.select_frame_by_name("home")
+
+    def selectCell(self, cell):
+        print("row:", cell["row"])
+        print("column:", cell["column"])
+        print("value:", cell["value"])
+
+        row = cell["row"]
+        column = cell["column"]
+
+    def pick_entry(self, e): print("click", e)
 
     def search_event(self):
         print("Test")
