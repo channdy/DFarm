@@ -101,7 +101,12 @@ class App(customtkinter.CTk):
             # print(row)
 
         self.device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, hover=True, command=self.deviceTableCell, header_color="#2A8C55", hover_color="#B4B4B4", corner_radius=0)
+
+        # for i in range(len(self.device_table.rows)):
+        #     self.device_table.edit_row(i, hover_color='#a5b0af')
+        self.device_table.configure(fg_color="#a5b0af", hover_color="#a5b0af")
         self.device_table.pack(expand=True, fill="both", padx=20, pady=20)
+
 
 
         self.device_reload_btn = customtkinter.CTkButton(self.import_account_frame, text="Reload")
