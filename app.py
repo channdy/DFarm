@@ -18,6 +18,9 @@ class App(customtkinter.CTk):
         self.title("DFarm Tool")
         self.geometry("1050x500")
 
+        self.device_row_nums = []
+        self.device_deleted_values = []
+
         # set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -97,8 +100,8 @@ class App(customtkinter.CTk):
             device_tbl_val.append(row)
             # print(row)
 
-        device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, hover=True, command=self.selectCell, header_color="#2A8C55", hover_color="#B4B4B4", colors=["yellow", "green"])
-        device_table.pack(expand=True, fill="both", padx=20, pady=20)
+        self.device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, hover=True, command=self.deviceTableCell, header_color="#2A8C55", hover_color="#B4B4B4", corner_radius=0)
+        self.device_table.pack(expand=True, fill="both", padx=20, pady=20)
 
 
         self.device_reload_btn = customtkinter.CTkButton(self.import_account_frame, text="Reload")
@@ -154,6 +157,24 @@ class App(customtkinter.CTk):
 
         # select default frame
         self.select_frame_by_name("home")
+
+
+    def deviceTableCell(self,cell):
+        if cell["row"]==0:
+            return # don't change header
+        if cell["row"] not in self.device_row_nums:
+            print("Select")
+            self.device_table.select_row(cell["row"])
+            self.device_table.edit_row(cell["row"], fg_color='#008000')
+            self.device_row_nums.append(cell["row"])
+            self.device_deleted_values.append(self.device_table.get_row(cell["row"]))
+        else:
+            print("Deselect")
+            self.device_table.deselect_row(cell["row"])
+            self.device_row_nums.remove(cell["row"])
+            self.device_deleted_values.remove(self.device_table.get_row(cell["row"]))
+        print(self.device_row_nums)
+
 
     def selectCell(self, cell):
         print("row:", cell["row"])
