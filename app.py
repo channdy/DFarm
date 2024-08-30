@@ -9,7 +9,7 @@ from CTkXYFrame import *
 import sqlite3
 from ldplayer import LDPlayer
 
-connection = sqlite3.connect("database.db")
+conn = sqlite3.connect("database.db")
 
 
 class App(customtkinter.CTk):
@@ -86,13 +86,21 @@ class App(customtkinter.CTk):
         self.xy_frame = CTkXYFrame(self.home_frame)
         self.xy_frame.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
 
-        ld = LDPlayer("D:\LDPlayer-Mod")
+        ld = LDPlayer("F:\LD-New")
         ldplayers = ld.list_ldplayer()
-        # for em in ldplayers:
-        #     print(em)
+        print(ldplayers)
+        for key, value in ldplayers.items():
+            cur = conn.cursor()
+            # rows = cursor.execute("SELECT * FROM device").fetchall()
+            cur.execute("INSERT INTO device(id, name, port, status) VALUES (?,?,?,?)", (int(key), value["name"], value["port"], value["is_running"]))
+            conn.commit()
+        # conn.close()
 
-        cursor = connection.cursor()
-        rows = cursor.execute("SELECT * FROM device").fetchall()
+        cur = conn.cursor()
+        rows = cur.execute("SELECT * FROM device").fetchall()
+        # conn.commit()
+        conn.close()
+
         # print(rows)
         device_tbl_val = [
             ["ID","Name","Port","Status"]
@@ -126,37 +134,6 @@ class App(customtkinter.CTk):
 
         table = CTkTable(self.xy_frame, values=acct_tbl_val)
         table.pack()
-
-        # self.scrollable_frame = customtkinter.CTkScrollableFrame(self, label_text="CTkScrollableFrame")
-        # self.scrollable_frame.grid(row=1, column=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
-        # self.scrollable_frame.grid_columnconfigure(0, weight=1)
-
-
-        # self.radiobutton_frame = customtkinter.CTkFrame(self.home_frame)
-        # self.radiobutton_frame.grid(row=0, column=3, padx=(20, 20), pady=(20, 0), sticky="nsew")
-        # self.radio_var = tkinter.IntVar(value=0)
-        # self.label_radio_group = customtkinter.CTkLabel(master=self.radiobutton_frame, text="CTkRadioButton Group:")
-        # self.label_radio_group.grid(row=0, column=2, columnspan=1, padx=10, pady=10, sticky="")
-        # self.radio_button_1 = customtkinter.CTkRadioButton(master=self.radiobutton_frame, variable=self.radio_var, value=0)
-        # self.radio_button_1.grid(row=1, column=2, pady=10, padx=20, sticky="n")
-        # self.radio_button_2 = customtkinter.CTkRadioButton(master=self.radiobutton_frame, variable=self.radio_var, value=1)
-        # self.radio_button_2.grid(row=2, column=2, pady=10, padx=20, sticky="n")
-        # self.radio_button_3 = customtkinter.CTkRadioButton(master=self.radiobutton_frame, variable=self.radio_var, value=2)
-        # self.radio_button_3.grid(row=3, column=2, pady=10, padx=20, sticky="n")
-
-        # self.home_frame.grid_columnconfigure(0, weight=1)
-
-        # self.home_frame_large_image_label = customtkinter.CTkLabel(self.home_frame, text="", image=self.large_test_image)
-        # self.home_frame_large_image_label.grid(row=0, column=0, padx=20, pady=10)
-
-        # self.home_frame_button_1 = customtkinter.CTkButton(self.home_frame, text="", image=self.image_icon_image)
-        # self.home_frame_button_1.grid(row=1, column=0, padx=20, pady=10)
-        # self.home_frame_button_2 = customtkinter.CTkButton(self.home_frame, text="CTkButton", image=self.image_icon_image, compound="right")
-        # self.home_frame_button_2.grid(row=2, column=0, padx=20, pady=10)
-        # self.home_frame_button_3 = customtkinter.CTkButton(self.home_frame, text="CTkButton", image=self.image_icon_image, compound="top")
-        # self.home_frame_button_3.grid(row=3, column=0, padx=20, pady=10)
-        # self.home_frame_button_4 = customtkinter.CTkButton(self.home_frame, text="CTkButton", image=self.image_icon_image, compound="bottom", anchor="w")
-        # self.home_frame_button_4.grid(row=4, column=0, padx=20, pady=10)
 
         # create second frame
         self.second_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
