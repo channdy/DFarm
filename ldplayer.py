@@ -6,4 +6,7 @@ class LDPlayer():
 
     def list_ldplayer(self):
         ld = emulator.LDPlayer(ldplayer_dir=self.ldplayer_dir)
-        return ld.emulators
+        print(ld.list_name())
+        # for em in ld.emulators:
+            # print(em.list_name())
+        # return ld.emulators

@@ -7,6 +7,7 @@ import random
 from CTkTable import *
 from CTkXYFrame import *
 import sqlite3
+from ldplayer import LDPlayer
 
 connection = sqlite3.connect("database.db")
 
@@ -85,9 +86,10 @@ class App(customtkinter.CTk):
         self.xy_frame = CTkXYFrame(self.home_frame)
         self.xy_frame.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
 
-        
-
-
+        ld = LDPlayer("D:\LDPlayer-Mod")
+        ldplayers = ld.list_ldplayer()
+        # for em in ldplayers:
+        #     print(em)
 
         cursor = connection.cursor()
         rows = cursor.execute("SELECT * FROM device").fetchall()
@@ -102,9 +104,11 @@ class App(customtkinter.CTk):
 
         self.device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, hover=True, command=self.deviceTableCell, header_color="#2A8C55", hover_color="#B4B4B4", corner_radius=0)
 
-        # for i in range(len(self.device_table.rows)):
-        #     self.device_table.edit_row(i, hover_color='#a5b0af')
+        for i in range(len(rows)):
+            self.device_table.edit_row(i, hover_color='#a5b0af')
+
         self.device_table.configure(fg_color="#a5b0af", hover_color="#a5b0af")
+        
         self.device_table.pack(expand=True, fill="both", padx=20, pady=20)
 
 
@@ -170,12 +174,13 @@ class App(customtkinter.CTk):
         if cell["row"] not in self.device_row_nums:
             print("Select")
             self.device_table.select_row(cell["row"])
-            self.device_table.edit_row(cell["row"], fg_color='#008000')
+            self.device_table.edit_row(cell["row"], fg_color='#008000', hover_color='#008000')
             self.device_row_nums.append(cell["row"])
             self.device_deleted_values.append(self.device_table.get_row(cell["row"]))
         else:
             print("Deselect")
             self.device_table.deselect_row(cell["row"])
+            self.device_table.edit_row(cell["row"], hover_color='#a5b0af')
             self.device_row_nums.remove(cell["row"])
             self.device_deleted_values.remove(self.device_table.get_row(cell["row"]))
         print(self.device_row_nums)
