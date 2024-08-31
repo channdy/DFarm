@@ -8,6 +8,7 @@ from CTkTable import *
 from CTkXYFrame import *
 import sqlite3
 from ldplayer import LDPlayer
+from database import DB
 
 conn = sqlite3.connect("database.db")
 
@@ -21,6 +22,10 @@ class App(customtkinter.CTk):
 
         self.device_row_nums = []
         self.device_deleted_values = []
+
+        self.db = DB()
+        self.db.create_table()
+        self.db.delate_record()
 
         # set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
@@ -86,33 +91,25 @@ class App(customtkinter.CTk):
         self.xy_frame = CTkXYFrame(self.home_frame)
         self.xy_frame.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
 
-        ld = LDPlayer("F:\LD-New")
+        ld = LDPlayer("D:\LDPlayer-Mod")
         ldplayers = ld.list_ldplayer()
-        print(ldplayers)
+        # print(ldplayers)
         for key, value in ldplayers.items():
-            cur = conn.cursor()
-            # rows = cursor.execute("SELECT * FROM device").fetchall()
-            cur.execute("INSERT INTO device(id, name, port, status) VALUES (?,?,?,?)", (int(key), value["name"], value["port"], value["is_running"]))
-            conn.commit()
-        # conn.close()
+            status = 'stopped'
+            if value["is_running"] == 'True':
+                status = "running"
+            self.db.insert_data((int(key), value["name"], value["port"], status))
 
-        cur = conn.cursor()
-        rows = cur.execute("SELECT * FROM device").fetchall()
-        # conn.commit()
-        conn.close()
-
-        # print(rows)
+        devices = self.db.select_all()
         device_tbl_val = [
             ["ID","Name","Port","Status"]
         ]
-
-        for row in rows:
-            device_tbl_val.append(row)
-            # print(row)
+        for device in devices:
+            device_tbl_val.append(device)
 
         self.device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, hover=True, command=self.deviceTableCell, header_color="#2A8C55", hover_color="#B4B4B4", corner_radius=0)
 
-        for i in range(len(rows)):
+        for i in range(len(devices)):
             self.device_table.edit_row(i, hover_color='#a5b0af')
 
         self.device_table.configure(fg_color="#a5b0af", hover_color="#a5b0af")
@@ -123,8 +120,12 @@ class App(customtkinter.CTk):
 
         self.device_reload_btn = customtkinter.CTkButton(self.import_account_frame, text="Reload")
         self.device_reload_btn.grid(row=0, column=0, padx=20, pady=(10, 10))
+        self.device_start_btn = customtkinter.CTkButton(self.import_account_frame, text="Start")
+        self.device_start_btn.grid(row=1, column=0, padx=20, pady=(10, 10))
+        self.device_stop_btn = customtkinter.CTkButton(self.import_account_frame, text="Stop")
+        self.device_stop_btn.grid(row=2, column=0, padx=20, pady=(10, 10))
         self.account_import_btn = customtkinter.CTkButton(self.import_account_frame, text="Import Account")
-        self.account_import_btn.grid(row=1, column=0, padx=20, pady=(10, 10))
+        self.account_import_btn.grid(row=3, column=0, padx=20, pady=(10, 10))
 
         acct_tbl_val = [
             ['No', 'User Name', 'User ID', 'Password', '2FA', 'Token', 'Cookie', 'Page', 'Status']
