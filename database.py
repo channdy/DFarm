@@ -96,7 +96,7 @@ class AccountDB():
         """Selects all rows from the table to display
         """
         try:
-            self.cur.execute('SELECT * FROM account')
+            self.cur.execute('SELECT id, device, account_id, password, _2fa, access_token, cookie, status, store, information FROM account')
             return self.cur.fetchall()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
