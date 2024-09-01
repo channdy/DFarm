@@ -15,6 +15,6 @@ class LDPlayer():
         return result
 
     def get_adb_port(self,idx):
-        return int(idx) * 2 + 5554
+        return f"emulator-{int(idx) * 2 + 5554}"
     
 

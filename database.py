@@ -12,7 +12,7 @@ class DeviceDB():
         """ Create the table with given columns
         """
         try:
-            self.cur.execute('''CREATE TABLE IF NOT EXISTS device (id int, name text, port text)''')
+            self.cur.execute('''CREATE TABLE IF NOT EXISTS device (id int, name text, serial text, app_count int, location text)''')
             self.conn.commit()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
@@ -20,7 +20,7 @@ class DeviceDB():
     def insert_data(self, entities):
         """  Insert records into the table
         """
-        query = """INSERT INTO device(id, name, port) VALUES (?,?,?)"""
+        query = """INSERT INTO device(id, name, serial) VALUES (?,?,?)"""
         try:
             self.cur.execute(query, entities)
             self.conn.commit()
@@ -41,7 +41,7 @@ class DeviceDB():
         """Selects all rows from the table to display
         """
         try:
-            self.cur.execute('SELECT * FROM device')
+            self.cur.execute('SELECT id, name, serial, app_count, location FROM device')
             return self.cur.fetchall()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
@@ -67,7 +67,8 @@ class AccountDB():
         """ Create the table with given columns
         """
         try:
-            self.cur.execute('''CREATE TABLE IF NOT EXISTS account (id INTEGER  primary key, device INTEGER , account_id text, password text, access_token text, _2fa text, cookie text, status text, store text, information text)''')
+            #['No', 'Status', 'Device Name', 'Account Name', 'UID', 'Page Name', 'Page ID', 'Password', '2FA', 'Token', 'Cookie', 'Package', 'Location', 'Store', 'Progress']
+            self.cur.execute('''CREATE TABLE IF NOT EXISTS account (id INTEGER  primary key, status text, device int, acct_name text, acct_uid text, page_name text, page_id text, pass text, _2fa text, _token text, cookie text, app_pkg text, location text, store text, progress text)''')
             self.conn.commit()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
@@ -75,7 +76,7 @@ class AccountDB():
     def insert_data(self, entities):
         """  Insert records into the table
         """
-        query = """INSERT INTO account (device, account_id, password, _2fa, store) VALUES (?,?,?,?,?)"""
+        query = """INSERT INTO account (device, acct_name, acct_uid, pass, _2fa, store) VALUES (?,?,?,?,?,?)"""
         try:
             self.cur.execute(query, entities)
             self.conn.commit()
@@ -96,7 +97,7 @@ class AccountDB():
         """Selects all rows from the table to display
         """
         try:
-            self.cur.execute('SELECT id, device, account_id, password, _2fa, access_token, cookie, status, store, information FROM account')
+            self.cur.execute('SELECT id, status, device, acct_name, acct_uid, page_name, page_id, pass, _2fa, _token, cookie, app_pkg, location, store, progress FROM account')
             return self.cur.fetchall()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)

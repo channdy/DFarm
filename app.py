@@ -19,7 +19,7 @@ class App(customtkinter.CTk):
         super().__init__()
 
         self.title("DFarm Tool")
-        self.geometry("1050x500")
+        self.geometry("1500x500")
 
         self.device_row_nums = []
         self.device_deleted_values = []
@@ -87,82 +87,126 @@ class App(customtkinter.CTk):
         # self.scrollable_frame.grid(row=1, column=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
         # self.scrollable_frame.grid_columnconfigure(0, weight=2)
 
-        self.device_list_frame = customtkinter.CTkFrame(self.home_frame)
-        self.device_list_frame.grid(row=0, column=0, padx=(20, 0), pady=(20, 0), sticky="nsew")
-        self.import_account_frame = customtkinter.CTkFrame(self.home_frame)
-        self.import_account_frame.grid(row=0, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
-        self.account_list_frame = customtkinter.CTkFrame(self.home_frame)
-        self.account_list_frame.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        # Start Device Frame
+        self.device_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=2)
+        self.device_frame.grid(row=0, column=0, padx=(10, 0), pady=(10, 0), sticky="nsew")
+        # self.device_frame.grid_rowconfigure(2, weight=1)
 
-        # self.scrollable_frame = customtkinter.CTkScrollableFrame(master=self.home_frame, width=200, height=200)
-        # self.scrollable_frame.grid(row=1, column=0, padx=20, pady=20)
+        self.device_table_frame = customtkinter.CTkFrame(self.device_frame, fg_color="transparent", width=100)
+        self.device_table_frame.grid(row=1, column=0, columnspan=3, padx=10, pady=0, sticky="nsew")
 
-
-        self.xy_frame = CTkXYFrame(self.home_frame)
-        self.xy_frame.grid(row=1, column=0, columnspan=3, padx=(20, 0), pady=(20, 0), sticky="nsew")
-
+        self.device_ld_path_entry = customtkinter.CTkEntry(master=self.device_frame, placeholder_text="LD Path", width=300)
+        self.device_ld_path_entry.grid(row=0, column=0, sticky="we", padx=(12, 0), pady=12)
+        self.device_ld_path_entry.bind("<Return>", self.set_ld_path)
+        self.device_reload_btn = customtkinter.CTkButton(self.device_frame, text="Reload", width=70)
+        self.device_reload_btn.grid(row=0, column=1, padx=5, pady=0)
+        self.device_kill_adb_btn = customtkinter.CTkButton(self.device_frame, text="Kill ADB", width=70)
+        self.device_kill_adb_btn.grid(row=0, column=2, padx=5, pady=0)
+        
         ld = LDPlayer("F:\LD-New")
         ldplayers = ld.list_ldplayer()
-        # print(ldplayers)
         for key, value in ldplayers.items():
             self.db.insert_data((int(key), value["name"], value["port"]))
 
-        devices = self.db.select_all()
-        device_tbl_val = [
-            ["ID","Name","Port"]
+        devices_list = self.db.select_all()
+        device_table_data = [
+            ["ID", "LD Name","Serial Number", "FB App", "IP Location"]
         ]
-        for device in devices:
-            device_tbl_val.append(device)
-
-        # self.device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, hover=True, command=self.deviceTableCell, header_color="#2A8C55", hover_color="#B4B4B4", corner_radius=0)
-        self.device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, command=self.deviceTableCell, corner_radius=1)
-
-        for i in range(len(devices)):
+        for device in devices_list:
+            device_table_data.append(device)
+            
+        self.device_table = CTkTable(master=self.device_table_frame, values=device_table_data, command=self.deviceTableCell, corner_radius=1, width=100)
+        for i in range(len(devices_list)):
             self.device_table.edit_row(i, hover_color='#a5b0af')
-
-        # self.device_table.configure(fg_color="#a5b0af", hover_color="#a5b0af")
         self.device_table.edit_row(0, fg_color=("#4081BF","#212529"), font=("Roboto", 12, "bold"))
-        self.device_table.pack(expand=True, fill="both", padx=20, pady=20)
+        self.device_table.edit_column(0, width=15)
+        self.device_table.pack(expand=True, fill="both", padx=0, pady=0)
 
-        self.device_reload_btn = customtkinter.CTkButton(self.import_account_frame, text="Reload")
-        self.device_reload_btn.grid(row=0, column=0, padx=20, pady=(10, 10))
-        self.account_import_btn = customtkinter.CTkButton(self.import_account_frame, text="Import", command=self.open_FileDialog)
-        self.account_import_btn.grid(row=1, column=0, padx=20, pady=(10, 10))
-        self.account_start_btn = customtkinter.CTkButton(self.import_account_frame, text="Start", command=self.open_FileDialog)
-        self.account_start_btn.grid(row=1, column=1, padx=20, pady=(10, 10))
+        #Start Account Frame
+        self.account_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=2)
+        self.account_frame.grid(row=0, column=1, padx=(10, 0), pady=(10, 0), sticky="nsew")
+        self.account_check_status_btn = customtkinter.CTkButton(self.account_frame, text="Check Account", width=70)
+        self.account_check_status_btn.grid(row=0, column=0, sticky="we", padx=(12, 0), pady=12)
+        self.account_delete_btn = customtkinter.CTkButton(self.account_frame, text="Delete", width=70)
+        self.account_delete_btn.grid(row=0, column=1, sticky="we", padx=(12, 0), pady=12)
 
-        self.make_table_acct()
+        # self.account_table_frame = customtkinter.CTkFrame(self.account_frame, fg_color="transparent", width=100)
+        # self.account_table_frame.grid(row=1, column=0, columnspan=3, padx=10, pady=0, sticky="nsew")
 
-        # self.accounts = self.db_acct.select_all()
-        # for account in self.accounts:
-        #     # print(account)
-        #     acct_tbl_val.append(account)
-        # self.acct_table = CTkTable(master=self.xy_frame, values=acct_tbl_val)
-        # self.acct_table.pack(expand=True, fill="both", padx=20, pady=20)
+        self.account_table_frame = CTkXYFrame(self.account_frame, width=900)
+        self.account_table_frame.grid(row=1, column=0, columnspan=3, padx=(20, 0), pady=(20, 0), sticky="nsew")
 
-        # create second frame
+        self.build_acct_table()
+
+
+        # self.import_account_frame = customtkinter.CTkFrame(self.home_frame)
+        # self.import_account_frame.grid(row=0, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        # self.account_list_frame = customtkinter.CTkFrame(self.home_frame)
+        # self.account_list_frame.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
+
+
+        # self.xy_frame = CTkXYFrame(self.home_frame)
+        # self.xy_frame.grid(row=1, column=0, columnspan=3, padx=(20, 0), pady=(20, 0), sticky="nsew")
+
+        # ld = LDPlayer("F:\LD-New")
+        # ldplayers = ld.list_ldplayer()
+        # # print(ldplayers)
+        # for key, value in ldplayers.items():
+        #     self.db.insert_data((int(key), value["name"], value["port"]))
+
+        # devices = self.db.select_all()
+        # device_tbl_val = [
+        #     ["ID","Name","Port"]
+        # ]
+        # for device in devices:
+        #     device_tbl_val.append(device)
+
+        # # self.device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, hover=True, command=self.deviceTableCell, header_color="#2A8C55", hover_color="#B4B4B4", corner_radius=0)
+        # self.device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, command=self.deviceTableCell, corner_radius=1)
+
+        # for i in range(len(devices)):
+        #     self.device_table.edit_row(i, hover_color='#a5b0af')
+
+        # # self.device_table.configure(fg_color="#a5b0af", hover_color="#a5b0af")
+        # self.device_table.edit_row(0, fg_color=("#4081BF","#212529"), font=("Roboto", 12, "bold"))
+        # self.device_table.pack(expand=True, fill="both", padx=20, pady=20)
+
+        # self.device_reload_btn = customtkinter.CTkButton(self.import_account_frame, text="Reload")
+        # self.device_reload_btn.grid(row=0, column=0, padx=20, pady=(10, 10))
+        # self.account_import_btn = customtkinter.CTkButton(self.import_account_frame, text="Import", command=self.open_FileDialog)
+        # self.account_import_btn.grid(row=1, column=0, padx=20, pady=(10, 10))
+        # self.account_start_btn = customtkinter.CTkButton(self.import_account_frame, text="Start", command=self.open_FileDialog)
+        # self.account_start_btn.grid(row=1, column=1, padx=20, pady=(10, 10))
+
+        # self.make_table_acct()
+
+        # # create second frame
         self.second_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
 
-        # create third frame
+        # # create third frame
         self.third_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
 
-        # select default frame
+        # # select default frame
         self.select_frame_by_name("home")
 
-    def make_table_acct(self):
+    def set_ld_path(self):
+        print("LD Path")
+
+    def build_acct_table(self):
+        #id INTEGER  primary key, status text, device int, acct_name text, acct_uid text, page_name text, pass text, _2fa text, _token text, cookie text, app_pkg text, location text, store text
         acct_tbl_val = [
-            ['No', 'Device ID', 'Account ID', 'Password', '2FA', 'Token', 'Cookie', 'Page', 'Status', 'Information']
+            ['ID', 'Status', 'Device Name', 'Account Name', 'UID', 'Page Name', 'Page ID', 'Password', '2FA', 'Token', 'Cookie', 'Package', 'Location', 'Store', 'Progress']
         ]
         self.accounts = self.db_acct.select_all()
         for account in self.accounts:
-            # print(account)
+            print(account)
             acct_tbl_val.append(account)
-        self.acct_table = CTkTable(master=self.xy_frame, values=acct_tbl_val, corner_radius=1, command=self.accountTableCell)
+        self.acct_table = CTkTable(master=self.account_table_frame, values=acct_tbl_val, corner_radius=1, command=self.accountTableCell)
         
         self.acct_table.edit_row(0, fg_color=("#4081BF","#212529"), font=("Roboto", 12, "bold"))
-        self.acct_table.edit_column(0, width=15)
-        self.acct_table.edit_column(1, width=30)
-        self.acct_table.edit_column(3, width=30)
+        # self.acct_table.edit_column(0, width=15)
+        # self.acct_table.edit_column(1, width=30)
+        # self.acct_table.edit_column(3, width=30)
         self.acct_table.pack(expand=True, fill="both", padx=20, pady=20)
 
     def accountTableCell(self, cell):
