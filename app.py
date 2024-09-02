@@ -19,7 +19,7 @@ class App(customtkinter.CTk):
         super().__init__()
 
         self.title("DFarm Tool")
-        self.geometry("1500x500")
+        self.geometry("1600x700")
 
         self.device_row_nums = []
         self.device_deleted_values = []
@@ -103,7 +103,7 @@ class App(customtkinter.CTk):
         self.device_kill_adb_btn = customtkinter.CTkButton(self.device_frame, text="Kill ADB", width=70)
         self.device_kill_adb_btn.grid(row=0, column=2, padx=5, pady=0)
         
-        ld = LDPlayer("F:\LD-New")
+        ld = LDPlayer("D:\LDPlayer-Mod")
         ldplayers = ld.list_ldplayer()
         for key, value in ldplayers.items():
             self.db.insert_data((int(key), value["name"], value["port"]))
@@ -124,19 +124,19 @@ class App(customtkinter.CTk):
 
         #Start Account Frame
         self.account_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=2)
-        self.account_frame.grid(row=0, column=1, padx=(10, 0), pady=(10, 0), sticky="nsew")
-        self.account_check_status_btn = customtkinter.CTkButton(self.account_frame, text="Check Account", width=70)
+        self.account_frame.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+        self.account_check_status_btn = customtkinter.CTkButton(self.account_frame, text="Check Account", width=30)
         self.account_check_status_btn.grid(row=0, column=0, sticky="we", padx=(12, 0), pady=12)
-        self.account_delete_btn = customtkinter.CTkButton(self.account_frame, text="Delete", width=70)
-        self.account_delete_btn.grid(row=0, column=1, sticky="we", padx=(12, 0), pady=12)
+        self.account_delete_btn = customtkinter.CTkButton(self.account_frame, text="Delete", width=30)
+        self.account_delete_btn.grid(row=0, column=1, sticky="we", padx=0, pady=0)
 
-        # self.account_table_frame = customtkinter.CTkFrame(self.account_frame, fg_color="transparent", width=100)
-        # self.account_table_frame.grid(row=1, column=0, columnspan=3, padx=10, pady=0, sticky="nsew")
+        self.account_table_frame = CTkXYFrame(self.account_frame, width=900, fg_color="red")
+        self.account_table_frame.grid(row=1, column=0, columnspan=3, padx=0, pady=0, sticky="nsew")
 
-        self.account_table_frame = CTkXYFrame(self.account_frame, width=900)
-        self.account_table_frame.grid(row=1, column=0, columnspan=3, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        self.account_delete_btn = customtkinter.CTkButton(self.account_table_frame, text="Test", width=30)
+        self.account_delete_btn.grid(row=0, column=0, sticky="we", padx=0, pady=0)
 
-        self.build_acct_table()
+        # self.build_acct_table()
 
 
         # self.import_account_frame = customtkinter.CTkFrame(self.home_frame)
@@ -207,7 +207,7 @@ class App(customtkinter.CTk):
         # self.acct_table.edit_column(0, width=15)
         # self.acct_table.edit_column(1, width=30)
         # self.acct_table.edit_column(3, width=30)
-        self.acct_table.pack(expand=True, fill="both", padx=20, pady=20)
+        self.acct_table.pack(expand=True, fill="both", padx=0, pady=0)
 
     def accountTableCell(self, cell):
         if cell["row"]==0:
