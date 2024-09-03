@@ -188,8 +188,15 @@ class Setting():
         """
         query = """INSERT INTO setting(name, value) VALUES (?,?)"""
         try:
-            self.cur.execute(query, entities)
-            self.conn.commit()
+            name = entities[0]
+            value = entities[1]
+            exist_val = self.get_setting(name)
+            if exist_val:
+                self.cur.execute("UPDATE setting SET value = ? WHERE name = ?", (value, name,))
+                self.conn.commit()
+            else:
+                self.cur.execute(query, entities)
+                self.conn.commit()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
         # self.conn.close()
@@ -209,6 +216,15 @@ class Setting():
         try:
             self.cur.execute('SELECT * FROM setting')
             return self.cur.fetchall()
+        except sqlite3.IntegrityError as e:
+            print("Error name:", e.sqlite_errorname)
+
+    def get_setting(self, param):
+        """Selects a row from the table to display
+        """
+        try:
+            self.cur.execute("SELECT value FROM setting WHERE name = ?", (param,))
+            return self.cur.fetchone()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
 

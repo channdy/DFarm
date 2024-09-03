@@ -2,6 +2,7 @@ import customtkinter
 import tkinter
 import tkinter.messagebox
 import os
+import time
 from PIL import Image
 import random
 from CTkTable import *
@@ -9,7 +10,8 @@ from CTkXYFrame import *
 import sqlite3
 from ldplayer import LDPlayer
 from database import DeviceDB, AccountDB, PageDB, Setting
-from tkfilebrowser import askopendirname, askopenfilenames, asksaveasfilename
+# from tkfilebrowser import askopendirname, askopenfilenames, asksaveasfilename
+from tkinter.filedialog import askopenfile
 
 conn = sqlite3.connect("database.db")
 
@@ -30,6 +32,7 @@ class App(customtkinter.CTk):
         self.db = DeviceDB()
         self.db.create_table()
         self.db.delete_record()
+        self.devices_list = self.db.select_all()
 
         self.db_acct = AccountDB()
         self.db_acct.create_table()
@@ -39,6 +42,17 @@ class App(customtkinter.CTk):
         self.db_setting.create_table()
 
         self.acct_table = None
+
+        # self.ldPlayer_dir = "D:\LDPlayer-Mod"
+        self.ld_path_entry_text = customtkinter.StringVar()
+        self.ldPlayer_dir = self.db_setting.get_setting("ldPlayer_dir")
+        # print(self.ldPlayer_dir)
+        if self.ldPlayer_dir is not None:
+            self.ld_path_entry_text.set(self.ldPlayer_dir[0])
+        else:
+            self.ldPlayer_dir = ""
+
+        self.bind_all("<Button-1>", lambda event: event.widget.focus_set())
 
         # set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
@@ -98,9 +112,9 @@ class App(customtkinter.CTk):
         self.device_table_frame = customtkinter.CTkFrame(self.device_frame, fg_color="transparent", width=100)
         self.device_table_frame.grid(row=1, column=0, columnspan=3, padx=10, pady=0, sticky="nsew")
 
-        self.device_ld_path_entry = customtkinter.CTkEntry(master=self.device_frame, placeholder_text="LD Path", width=300)
+        self.device_ld_path_entry = customtkinter.CTkEntry(master=self.device_frame, placeholder_text="LD Path", width=300, textvariable=self.ld_path_entry_text)
         self.device_ld_path_entry.grid(row=0, column=0, sticky="we", padx=(12, 0), pady=12)
-        # self.device_ld_path_entry.bind("<Return>", self.set_ld_path)
+        self.device_ld_path_entry.bind("<FocusOut>", self.ld_path_entry_focus_out)
         # self.device_ld_path_entry.bind("<FocusOut>", self.set_ld_path("Test"))
         # self.device_ld_path_entry.bind("<FocusIn>", self.entry_focus_in)
         # self.device_ld_path_entry.bind("<FocusOut>", self.entry_focus_out)
@@ -111,20 +125,21 @@ class App(customtkinter.CTk):
         self.device_kill_adb_btn = customtkinter.CTkButton(self.device_frame, text="Kill ADB", width=70)
         self.device_kill_adb_btn.grid(row=0, column=2, padx=5, pady=0)
         
-        ld = LDPlayer("F:\LD-New")
-        ldplayers = ld.list_ldplayer()
-        for key, value in ldplayers.items():
-            self.db.insert_data((int(key), value["name"], value["port"]))
+        if self.ldPlayer_dir is not None:
+            if os.path.isdir(self.ldPlayer_dir[0]):
+                self.players = LDPlayer(self.ldPlayer_dir[0])
+                for key, value in self.players.list_ldplayer().items():
+                    self.db.insert_data((int(key), value["name"], value["port"]))
 
-        devices_list = self.db.select_all()
+        
         device_table_data = [
             ["ID", "LD Name","Serial Number", "FB App", "IP Location"]
         ]
-        for device in devices_list:
+        for device in self.devices_list:
             device_table_data.append(device)
             
         self.device_table = CTkTable(master=self.device_table_frame, values=device_table_data, command=self.deviceTableCell, corner_radius=1, width=100)
-        for i in range(len(devices_list)):
+        for i in range(len(self.devices_list)):
             self.device_table.edit_row(i, hover_color='#a5b0af')
         self.device_table.edit_row(0, fg_color=("#4081BF","#212529"), font=("Roboto", 12, "bold"))
         self.device_table.edit_column(0, width=15)
@@ -133,11 +148,11 @@ class App(customtkinter.CTk):
         #Start Account Frame
         self.account_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=2)
         self.account_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
-        self.account_check_status_btn = customtkinter.CTkButton(self.account_frame, text="Check Account")
+        self.account_check_status_btn = customtkinter.CTkButton(self.account_frame, text="Check Account", command=self.check_account)
         self.account_check_status_btn.grid(row=0, column=0, padx=(12, 0), pady=12)
         self.account_delete_btn = customtkinter.CTkButton(self.account_frame, text="Delete")
         self.account_delete_btn.grid(row=0, column=1, padx=0, pady=0)
-        self.account_import_btn = customtkinter.CTkButton(self.account_frame, text="Import", command=self.open_FileDialog)
+        self.account_import_btn = customtkinter.CTkButton(self.account_frame, text="Import", command=self.open_import_file)
         self.account_import_btn.grid(row=0, column=2, padx=20, pady=(10, 10))
         self.account_table_frame = CTkXYFrame(self.account_frame, width=900)
         self.account_table_frame.grid(row=1, column=0, columnspan=10, padx=0, pady=0, sticky="nsew")
@@ -196,11 +211,29 @@ class App(customtkinter.CTk):
         # # select default frame
         self.select_frame_by_name("home")
 
-    def entry_focus_in(self):
-        print("entry_focus_in")
+    def check_account(self):
+        for device in self.devices_list:
+            print(f"start ldplayer id {device[0]}")
+            self.players.start(device[0])
+            time.sleep(5)
 
-    def entry_focus_out(self):
-        print("entry_focus_out")
+    def open_import_file(self):
+        file = askopenfile(mode ='r', filetypes =[('Text Files', '*.txt')])
+        if file is not None:
+            # print(file)
+            f = open(file, 'r')
+            Lines = f.readlines()
+            for line in Lines:
+                self.db_acct.insert_data(line.strip().split("|"))
+            self.acct_table.destroy()
+            self.build_acct_table()
+
+            # content = file.read()
+            # print(content)
+
+    def ld_path_entry_focus_out(self,event):
+        self.db_setting.insert_data(("ldPlayer_dir", self.device_ld_path_entry.get()))
+        # print("add element:", self.device_ld_path_entry.get())
 
     def set_ld_path(self, ld_path):
         print("LD Path")
@@ -239,15 +272,15 @@ class App(customtkinter.CTk):
             self.acct_row_nums.remove(cell["row"])
             self.acct_deleted_values.remove(self.acct_table.get_row(cell["row"]))
 
-    def open_FileDialog(self):
-        filepath = askopenfilenames(parent=self.account_frame, initialdir='/', initialfile='tmp', filetypes=[("Text", "*.txt"), ("All files", "*")])
-        if filepath:
-            f = open(filepath[0], 'r')
-            Lines = f.readlines()
-            for line in Lines:
-                self.db_acct.insert_data(line.strip().split("|"))
-            self.acct_table.destroy()
-            self.build_acct_table()
+    # def open_FileDialog(self):
+    #     filepath = askopenfilenames(parent=self.account_frame, initialdir='/', initialfile='tmp', filetypes=[("Text", "*.txt"), ("All files", "*")])
+    #     if filepath:
+    #         f = open(filepath[0], 'r')
+    #         Lines = f.readlines()
+    #         for line in Lines:
+    #             self.db_acct.insert_data(line.strip().split("|"))
+    #         self.acct_table.destroy()
+    #         self.build_acct_table()
         
 
     def deviceTableCell(self,cell):
