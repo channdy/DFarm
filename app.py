@@ -29,9 +29,9 @@ class App(customtkinter.CTk):
         self.acct_row_nums = []
         self.acct_deleted_values = []
 
-        self.db = DeviceDB()
-        self.db.create_table()
-        self.db.delete_record()
+        self.db_device = DeviceDB()
+        self.db_device.create_table()
+        self.db_device.delete_record()
 
         self.db_acct = AccountDB()
         self.db_acct.create_table()
@@ -119,7 +119,7 @@ class App(customtkinter.CTk):
         # self.device_ld_path_entry.bind("<FocusOut>", self.entry_focus_out)
         # App.update()
         # self.device_ld_path_entry.focus_set()
-        self.device_reload_btn = customtkinter.CTkButton(self.device_frame, text="Reload", width=70)
+        self.device_reload_btn = customtkinter.CTkButton(self.device_frame, text="Reload", width=70, command=self.reload_device)
         self.device_reload_btn.grid(row=0, column=1, padx=5, pady=0)
         self.device_kill_adb_btn = customtkinter.CTkButton(self.device_frame, text="Kill ADB", width=70)
         self.device_kill_adb_btn.grid(row=0, column=2, padx=5, pady=0)
@@ -127,24 +127,12 @@ class App(customtkinter.CTk):
         if self.ldPlayer_dir is not None:
             if os.path.isdir(self.ldPlayer_dir[0]):
                 self.players = LDPlayer(self.ldPlayer_dir[0])
-                for key, value in self.players.list_ldplayer().items():
-                    # print(value)
-                    self.db.insert_data((int(key), value["name"], value["status"], value["serial"]))
+                self.db_device.update_device(self.players)
+                # for key, value in self.players.list_ldplayer().items():
+                #     # print(value)
+                #     self.db.insert_data((int(key), value["name"], value["status"], value["serial"]))
 
-        self.devices_list = self.db.select_all()
-        
-        device_table_data = [
-            ["ID", "LD Name", "Status", "Serial", "App", "IP Location"]
-        ]
-        for device in self.devices_list:
-            device_table_data.append(device)
-            
-        self.device_table = CTkTable(master=self.device_table_frame, values=device_table_data, command=self.deviceTableCell, corner_radius=1, width=100)
-        for i in range(len(self.devices_list)):
-            self.device_table.edit_row(i, hover_color='#a5b0af')
-        self.device_table.edit_row(0, fg_color=("#4081BF","#212529"), font=("Roboto", 12, "bold"))
-        self.device_table.edit_column(0, width=15)
-        self.device_table.pack(expand=True, fill="both", padx=0, pady=0)
+        self.reload_device()
 
         #Start Account Frame
         self.account_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=2)
@@ -211,6 +199,21 @@ class App(customtkinter.CTk):
 
         # # select default frame
         self.select_frame_by_name("home")
+
+    def reload_device(self):
+        self.devices_list = self.db_device.select_all()
+        device_table_data = [
+            ["ID", "LD Name", "Status", "Serial", "App", "IP Location"]
+        ]
+        for device in self.devices_list:
+            device_table_data.append(device)
+            
+        self.device_table = CTkTable(master=self.device_table_frame, values=device_table_data, command=self.deviceTableCell, corner_radius=1, width=100)
+        for i in range(len(self.devices_list)):
+            self.device_table.edit_row(i, hover_color='#a5b0af')
+        self.device_table.edit_row(0, fg_color=("#4081BF","#212529"), font=("Roboto", 12, "bold"))
+        self.device_table.edit_column(0, width=15)
+        self.device_table.pack(expand=True, fill="both", padx=0, pady=0)
 
     def check_account(self):
         for device in self.devices_list:

@@ -1,55 +1,45 @@
 import tkinter as tk
-import tkinter.ttk as ttk
+from concurrent import futures
+import time
  
+thread_pool_executor = futures.ThreadPoolExecutor(max_workers=5)
  
 class MainFrame(tk.Frame):
+ 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.process = tk.IntVar(value=5)
-        self.after_id = None
+        self.label = tk.Label(self, text='not running')
+        self.label.pack()
+        self.listbox = tk.Listbox(self)
+        self.listbox.pack()
+        self.button = tk.Button(
+            self, text='blocking task', command=self.on_button)
+        self.button.pack(pady=15)
+        self.pack()
  
-        self.progressbar = ttk.Progressbar(
-            self.master, length=200, maximum=10, variable=self.process
-        )
-        self.progressbar.grid(row=1)
- 
-        self.add_button = ttk.Button(
-            self.master, text="Water +", command=self.add_water
-        )
-        self.sub_button = ttk.Button(
-            self.master, text="Water -", command=self.sub_water
-        )
- 
-        self.label = ttk.Label(self.master, textvariable=self.process)
- 
-        self.label.grid(row=0)
-        self.add_button.grid(row=0, sticky="e")
-        self.sub_button.grid(row=0, sticky="w")
- 
-    def reset_water(self):
-        self.process.set(5)
-        self.after_id = None
- 
-    def reset_after(self, delay_ms):
-        if self.after_id:
-            self.after_cancel(self.after_id)
- 
-        self.after_id = self.after(delay_ms, self.reset_water)
- 
-    def add_water(self):
-        progress_value = self.process.get()
-        if progress_value < self.progressbar["maximum"]:
-            self.process.set(progress_value + 1)
-            self.reset_after(60000)
- 
-    def sub_water(self):
-        progress_value = self.process.get()
-        if progress_value > 0:
-            self.process.set(progress_value - 1)
-            self.reset_after(60000)
+    def on_button(self):
+        print('Button clicked')
+        thread_pool_executor.submit(self.blocking_code)
  
  
-if __name__ == "__main__":
-    tk_app = tk.Tk()
+    def set_label_text(self, text=''):
+        self.label['text'] = text
+ 
+    def listbox_insert(self, item):
+        self.listbox.insert(tk.END, item)
+ 
+    def blocking_code(self):
+        self.after(0, self.set_label_text, 'running')
+ 
+        for number in range(100):
+            self.after(0, self.listbox_insert, number)
+            print(number)
+            # time.sleep(1)
+ 
+        self.after(0, self.set_label_text, ' not running')
+ 
+ 
+if __name__ == '__main__':
+    app = tk.Tk()
     main_frame = MainFrame()
-    tk_app.mainloop()
+    app.mainloop()

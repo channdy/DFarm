@@ -28,12 +28,14 @@ class DeviceDB():
             print("Error name:", e.sqlite_errorname)
         # self.conn.close()
 
-    def update_data(self, entities):
+    def update_device(self, devices):
         """ Update the table with given new values"""
         try:
-            self.cur.execute("UPDATE device SET name = ?, status =? WHERE id = ?", entities)
-            self.conn.commit()
-            print("The record updated successfully")
+            for key, value in devices.list_ldplayer().items():
+                print(key, value)
+            # self.cur.execute("UPDATE device SET name = ?, status =? WHERE id = ?", entities)
+            # self.conn.commit()
+            # print("The record updated successfully")
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
 
