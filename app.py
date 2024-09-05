@@ -32,7 +32,6 @@ class App(customtkinter.CTk):
         self.db = DeviceDB()
         self.db.create_table()
         self.db.delete_record()
-        self.devices_list = self.db.select_all()
 
         self.db_acct = AccountDB()
         self.db_acct.create_table()
@@ -129,11 +128,13 @@ class App(customtkinter.CTk):
             if os.path.isdir(self.ldPlayer_dir[0]):
                 self.players = LDPlayer(self.ldPlayer_dir[0])
                 for key, value in self.players.list_ldplayer().items():
-                    self.db.insert_data((int(key), value["name"], value["port"]))
+                    # print(value)
+                    self.db.insert_data((int(key), value["name"], value["status"], value["serial"]))
 
+        self.devices_list = self.db.select_all()
         
         device_table_data = [
-            ["ID", "LD Name","Serial Number", "FB App", "IP Location"]
+            ["ID", "LD Name", "Status", "Serial", "App", "IP Location"]
         ]
         for device in self.devices_list:
             device_table_data.append(device)

@@ -10,8 +10,12 @@ class LDPlayer():
         data = dict (zip (self.ld.list_index(), self.ld.list_name()))
         for key, value in data.items():
             status = self.ld.emulators[key].is_running()
-            port = self.get_adb_port(key)
-            result[key] = {"name": f"{value}", "port": f"{port}", "is_running": f"{status}"}
+            if status:
+                status = "Running"
+            else:
+                status = "Not running"
+            serial = self.get_adb_port(key)
+            result[key] = {"name": f"{value}", "status": f"{status}", "serial": f"{serial}"}
         return result
 
     def get_adb_port(self,idx):

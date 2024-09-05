@@ -12,7 +12,7 @@ class DeviceDB():
         """ Create the table with given columns
         """
         try:
-            self.cur.execute('''CREATE TABLE IF NOT EXISTS device (id int, name text, serial text, app_count int, location text)''')
+            self.cur.execute('''CREATE TABLE IF NOT EXISTS device (id int, name text, status text, serial text, app_count int, location text)''')
             self.conn.commit()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
@@ -20,7 +20,7 @@ class DeviceDB():
     def insert_data(self, entities):
         """  Insert records into the table
         """
-        query = """INSERT INTO device(id, name, serial) VALUES (?,?,?)"""
+        query = """INSERT INTO device(id, name, status, serial) VALUES (?,?,?,?)"""
         try:
             self.cur.execute(query, entities)
             self.conn.commit()
@@ -41,7 +41,7 @@ class DeviceDB():
         """Selects all rows from the table to display
         """
         try:
-            self.cur.execute('SELECT id, name, serial, app_count, location FROM device')
+            self.cur.execute('SELECT id, name, status, serial, app_count, location FROM device')
             return self.cur.fetchall()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
