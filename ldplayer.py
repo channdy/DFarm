@@ -23,5 +23,5 @@ class LDPlayer():
     
     def start(self, idx):
         em = self.ld.emulators[idx]
-        em.start()
+        em.start(wait=False)
 

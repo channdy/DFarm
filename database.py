@@ -32,10 +32,20 @@ class DeviceDB():
         """ Update the table with given new values"""
         try:
             for key, value in devices.list_ldplayer().items():
-                print(key, value)
-            # self.cur.execute("UPDATE device SET name = ?, status =? WHERE id = ?", entities)
-            # self.conn.commit()
-            # print("The record updated successfully")
+                # print(key, value)
+                self.cur.execute("SELECT * FROM device WHERE id = ?", (key,))
+                result = self.cur.fetchone()
+                # print(result)
+                if result is None:
+                    query = """INSERT INTO device(id, name, status, serial) VALUES (?,?,?,?)"""
+                    try:
+                        self.cur.execute(query, (key, value["name"], value["status"], value["serial"],))
+                        self.conn.commit()
+                    except sqlite3.IntegrityError as e:
+                        print("Error name:", e.sqlite_errorname)
+                else:                
+                    self.cur.execute("UPDATE device SET name = ?, status = ?, serial = ? WHERE id = ?", (value["name"], value["status"], value["serial"], key,))
+                    self.conn.commit()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
 

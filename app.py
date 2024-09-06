@@ -12,9 +12,10 @@ from ldplayer import LDPlayer
 from database import DeviceDB, AccountDB, PageDB, Setting
 # from tkfilebrowser import askopendirname, askopenfilenames, asksaveasfilename
 from tkinter.filedialog import askopenfile
+from concurrent import futures
 
 conn = sqlite3.connect("database.db")
-
+thread_pool_executor = futures.ThreadPoolExecutor(max_workers=2)
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -31,7 +32,7 @@ class App(customtkinter.CTk):
 
         self.db_device = DeviceDB()
         self.db_device.create_table()
-        self.db_device.delete_record()
+        # self.db_device.delete_record()
 
         self.db_acct = AccountDB()
         self.db_acct.create_table()
@@ -123,16 +124,8 @@ class App(customtkinter.CTk):
         self.device_reload_btn.grid(row=0, column=1, padx=5, pady=0)
         self.device_kill_adb_btn = customtkinter.CTkButton(self.device_frame, text="Kill ADB", width=70)
         self.device_kill_adb_btn.grid(row=0, column=2, padx=5, pady=0)
-        
-        if self.ldPlayer_dir is not None:
-            if os.path.isdir(self.ldPlayer_dir[0]):
-                self.players = LDPlayer(self.ldPlayer_dir[0])
-                self.db_device.update_device(self.players)
-                # for key, value in self.players.list_ldplayer().items():
-                #     # print(value)
-                #     self.db.insert_data((int(key), value["name"], value["status"], value["serial"]))
 
-        self.reload_device()
+        self.build_device_table()
 
         #Start Account Frame
         self.account_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=2)
@@ -149,48 +142,6 @@ class App(customtkinter.CTk):
 
         self.build_acct_table()
 
-
-        # self.import_account_frame = customtkinter.CTkFrame(self.home_frame)
-        # self.import_account_frame.grid(row=0, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
-        # self.account_list_frame = customtkinter.CTkFrame(self.home_frame)
-        # self.account_list_frame.grid(row=1, column=0, columnspan=2, padx=(20, 0), pady=(20, 0), sticky="nsew")
-
-
-        # self.xy_frame = CTkXYFrame(self.home_frame)
-        # self.xy_frame.grid(row=1, column=0, columnspan=3, padx=(20, 0), pady=(20, 0), sticky="nsew")
-
-        # ld = LDPlayer("F:\LD-New")
-        # ldplayers = ld.list_ldplayer()
-        # # print(ldplayers)
-        # for key, value in ldplayers.items():
-        #     self.db.insert_data((int(key), value["name"], value["port"]))
-
-        # devices = self.db.select_all()
-        # device_tbl_val = [
-        #     ["ID","Name","Port"]
-        # ]
-        # for device in devices:
-        #     device_tbl_val.append(device)
-
-        # # self.device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, hover=True, command=self.deviceTableCell, header_color="#2A8C55", hover_color="#B4B4B4", corner_radius=0)
-        # self.device_table = CTkTable(master=self.device_list_frame, values=device_tbl_val, command=self.deviceTableCell, corner_radius=1)
-
-        # for i in range(len(devices)):
-        #     self.device_table.edit_row(i, hover_color='#a5b0af')
-
-        # # self.device_table.configure(fg_color="#a5b0af", hover_color="#a5b0af")
-        # self.device_table.edit_row(0, fg_color=("#4081BF","#212529"), font=("Roboto", 12, "bold"))
-        # self.device_table.pack(expand=True, fill="both", padx=20, pady=20)
-
-        # self.device_reload_btn = customtkinter.CTkButton(self.import_account_frame, text="Reload")
-        # self.device_reload_btn.grid(row=0, column=0, padx=20, pady=(10, 10))
-        # self.account_import_btn = customtkinter.CTkButton(self.import_account_frame, text="Import", command=self.open_FileDialog)
-        # self.account_import_btn.grid(row=1, column=0, padx=20, pady=(10, 10))
-        # self.account_start_btn = customtkinter.CTkButton(self.import_account_frame, text="Start", command=self.open_FileDialog)
-        # self.account_start_btn.grid(row=1, column=1, padx=20, pady=(10, 10))
-
-        # self.make_table_acct()
-
         # # create second frame
         self.second_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
 
@@ -201,13 +152,21 @@ class App(customtkinter.CTk):
         self.select_frame_by_name("home")
 
     def reload_device(self):
+        self.device_table.destroy()
+        self.build_device_table()
+
+    def build_device_table(self):
+        if self.ldPlayer_dir is not None:
+            if os.path.isdir(self.ldPlayer_dir[0]):
+                self.players = LDPlayer(self.ldPlayer_dir[0])
+                self.db_device.update_device(self.players)
         self.devices_list = self.db_device.select_all()
         device_table_data = [
             ["ID", "LD Name", "Status", "Serial", "App", "IP Location"]
         ]
+
         for device in self.devices_list:
             device_table_data.append(device)
-            
         self.device_table = CTkTable(master=self.device_table_frame, values=device_table_data, command=self.deviceTableCell, corner_radius=1, width=100)
         for i in range(len(self.devices_list)):
             self.device_table.edit_row(i, hover_color='#a5b0af')
@@ -215,11 +174,23 @@ class App(customtkinter.CTk):
         self.device_table.edit_column(0, width=15)
         self.device_table.pack(expand=True, fill="both", padx=0, pady=0)
 
+    def check_account_btn(self):
+        thread_pool_executor.submit(self.check_account)
+
     def check_account(self):
         for device in self.devices_list:
             print(f"start ldplayer id {device[0]}")
             self.players.start(device[0])
-            time.sleep(5)
+            time.sleep(1)
+
+        # self.after(0, self.set_label_text, 'running')
+ 
+        # for number in range(5):
+        #     self.after(0, self.listbox_insert, number)
+        #     print(number)
+        #     time.sleep(1)
+ 
+        # self.after(0, self.set_label_text, ' not running')
 
     def open_import_file(self):
         file = askopenfile(mode ='r', filetypes =[('Text Files', '*.txt')])
