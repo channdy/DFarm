@@ -1,6 +1,7 @@
 import customtkinter
 import tkinter
-import tkinter.messagebox
+# import tkinter.messagebox
+from tkinter.messagebox import askyesno
 import os
 import time
 from PIL import Image
@@ -12,15 +13,15 @@ from ldplayer import LDPlayer
 from database import DeviceDB, AccountDB, PageDB, Setting
 # from tkfilebrowser import askopendirname, askopenfilenames, asksaveasfilename
 from tkinter.filedialog import askopenfile
-from concurrent import futures
+import threading
 
 conn = sqlite3.connect("database.db")
-thread_pool_executor = futures.ThreadPoolExecutor(max_workers=2)
+# thread_pool_executor = futures.ThreadPoolExecutor(max_workers=2)
 
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-
+        
         self.title("DFarm Tool")
         self.geometry("1600x700")
 
@@ -45,10 +46,10 @@ class App(customtkinter.CTk):
 
         # self.ldPlayer_dir = "D:\LDPlayer-Mod"
         self.ld_path_entry_text = customtkinter.StringVar()
-        self.ldPlayer_dir = self.db_setting.get_setting("ldPlayer_dir")
+        self.ldPlayer_dir = self.db_setting.get_setting("ldPlayer_dir")[0]
         # print(self.ldPlayer_dir)
         if self.ldPlayer_dir is not None:
-            self.ld_path_entry_text.set(self.ldPlayer_dir[0])
+            self.ld_path_entry_text.set(self.ldPlayer_dir)
         else:
             self.ldPlayer_dir = ""
 
@@ -130,9 +131,9 @@ class App(customtkinter.CTk):
         #Start Account Frame
         self.account_frame = customtkinter.CTkFrame(self.home_frame, corner_radius=2)
         self.account_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
-        self.account_check_status_btn = customtkinter.CTkButton(self.account_frame, text="Check Account", command=self.check_account)
+        self.account_check_status_btn = customtkinter.CTkButton(self.account_frame, text="Check Account", command=self.create_threads)
         self.account_check_status_btn.grid(row=0, column=0, padx=(12, 0), pady=12)
-        self.account_delete_btn = customtkinter.CTkButton(self.account_frame, text="Delete")
+        self.account_delete_btn = customtkinter.CTkButton(self.account_frame, text="Delete", command=self.update_table())
         self.account_delete_btn.grid(row=0, column=1, padx=0, pady=0)
         self.account_import_btn = customtkinter.CTkButton(self.account_frame, text="Import", command=self.open_import_file)
         self.account_import_btn.grid(row=0, column=2, padx=20, pady=(10, 10))
@@ -150,6 +151,21 @@ class App(customtkinter.CTk):
 
         # # select default frame
         self.select_frame_by_name("home")
+
+    def worker_thread(self, idx):
+        try:
+            ld = LDPlayer(self.ldPlayer_dir)
+            ld.start(idx)
+            time.sleep(60)
+        except Exception as e:
+            print("Error: Device {0}. Message:{1}".format(idx, e))
+    
+    def create_threads(self):
+        for device in self.devices_list:
+            print(f"starting device {device[0]}")
+            t = threading.Thread(target=self.worker_thread,args=(device[0],))
+            t.daemon = True
+            t.start()
 
     def reload_device(self):
         self.device_table.destroy()
@@ -174,24 +190,6 @@ class App(customtkinter.CTk):
         self.device_table.edit_column(0, width=15)
         self.device_table.pack(expand=True, fill="both", padx=0, pady=0)
 
-    def check_account_btn(self):
-        thread_pool_executor.submit(self.check_account)
-
-    def check_account(self):
-        for device in self.devices_list:
-            print(f"start ldplayer id {device[0]}")
-            self.players.start(device[0])
-            time.sleep(1)
-
-        # self.after(0, self.set_label_text, 'running')
- 
-        # for number in range(5):
-        #     self.after(0, self.listbox_insert, number)
-        #     print(number)
-        #     time.sleep(1)
- 
-        # self.after(0, self.set_label_text, ' not running')
-
     def open_import_file(self):
         file = askopenfile(mode ='r', filetypes =[('Text Files', '*.txt')])
         if file is not None:
@@ -213,6 +211,13 @@ class App(customtkinter.CTk):
     def set_ld_path(self, ld_path):
         print("LD Path")
         self.db_setting.insert_data(("ld_dir", ld_path))
+
+    def update_table(self):
+        value = self.device_table.edit(1,1)
+        # value = e = self.device_table.edit_row[row][col]
+        print(value)
+        # rows = table.get_row(row)
+        # print(rows)
 
 
     def build_acct_table(self):
@@ -281,6 +286,14 @@ class App(customtkinter.CTk):
 
         row = cell["row"]
         column = cell["column"]
+
+    def clos_window(self):
+        ans = askyesno(title='Hero v1.1 warning', message='Are you sure to exit the program?\nYes to exit, otherwise continue!')
+        if ans:
+            self.init_window_name.destroy()
+            sys.exit()
+        else:
+            return None
 
     def pick_entry(self, e): print("click", e)
 

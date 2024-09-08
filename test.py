@@ -1,44 +1,76 @@
-import tkinter as tk
-import time
-import queue
-import threading
-def runloop(thread_queue=None):
-    result = 0
-    for i in range(1000):
-        pass
-        #Do something with result
-        time.sleep(5)
-    result = result + 1
-    thread_queue.put(result)
-class MainApp(tk.Tk):
-    def __init__(self):
-            ####### Do something ######
-            super(MainApp,self).__init__()
-            self.myframe = tk.Frame(self)
-            self.myframe.grid(row=0, column=0, sticky='nswe')
-            self.mylabel = tk.Label(self.
-            myframe) # Element to be updated
-            self.mylabel.config(text='No message')
-            self.mylabel.grid(row=0, column=0)
-            self.mybutton = tk.Button(
-            self.myframe,
-            text='Change message111',
-            command=self.update_text)
-            self.mybutton.grid(row=1, column=0)
-    def update_text(self):
-            self.mylabel.config(text='Running loop')
-            self.thread_queue = queue.Queue()
-            self.new_thread = threading.Thread(
-            target=runloop,
-            kwargs={'thread_queue':self.thread_queue})
-            self.new_thread.start()
-            self.after(100, self.listen_for_result)
-    def listen_for_result(self):
-            try:
-                self.res = self.thread_queue.get(0)
-                self.mylabel.config(text='Loop terminated')
-            except queue.Empty:
-                self.after(100, self.listen_for_result)
+"""
+Author: William C. Canin
+Description: List file from a given directory, print and show the process in a Progressbar. Using Thread.
+"""
+
+from concurrent.futures import ThreadPoolExecutor
+from tkinter import Tk, Button, W, messagebox
+from tkinter.ttk import Progressbar
+from threading import Thread
+from os import walk
+from os.path import join
+# from time import sleep
+
+
+class Engine(Thread):
+    def __init__(self, path):
+        Thread.__init__(self)
+        self.path = path
+        self.read_porcentege = 0
+
+    def generator_files(self):
+        for r, d, f in walk(self.path):
+            for file in f:
+                yield join(r, file)
+
+    @staticmethod
+    def process(filepath):
+        print(filepath)
+
+    def run(self):
+        with ThreadPoolExecutor() as e:
+            for file in self.generator_files():
+                e.submit(self.process, file)
+                self.read_porcentege += 100 / len(set(self.generator_files()))
+
+
+class Window(Tk, Engine):
+    def __init__(self, path):
+        self.path = path
+        Tk.__init__(self)
+        Engine.__init__(self, self.path)
+
+        self.title("Progressbar TKinter")
+        self.geometry("240x100")
+        self.resizable(False, False)
+        self.configure(background="#d4d4d4")
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=3)
+
+        self.progressbar = Progressbar(self)
+        self.progressbar.configure(length=235)
+        self.progressbar.grid(column=0, row=0, sticky=W, padx=5, pady=5)
+        self.btn1 = Button(self)
+        self.btn1.configure(text="Start", cursor="hand2", background="#d4d4d4", foreground="#000")
+        self.btn1.grid(column=0, row=1, sticky=W, padx=100, pady=5)
+        self.btn1.configure(command=self.handle_start)
+
+    def handle_start(self):
+        self.start()
+        self.btn1.configure(state="disabled")
+
+        def update_progressbar():
+            if self.is_alive():
+                self.progressbar.config(value=self.read_porcentege)
+                self.after(10, update_progressbar)
+            else:
+                self.progressbar.config(value=100)
+                total = len(set(self.generator_files()))
+                messagebox.showinfo("Progress", f"Done! {total} read files.")
+
+        update_progressbar()
+
+
 if __name__ == "__main__":
-    main_app = MainApp()
-    main_app.mainloop()
+    w = Window("c:\\")
+    w.mainloop()
