@@ -32,7 +32,7 @@ class DeviceDB():
         """ Update the table with given new values"""
         try:
             for key, value in devices.list_ldplayer().items():
-                # print(key, value)
+                print(key, value)
                 self.cur.execute("SELECT * FROM device WHERE id = ?", (key,))
                 result = self.cur.fetchone()
                 # print(result)

@@ -16,7 +16,9 @@ from tkinter.filedialog import askopenfile
 import threading
 
 conn = sqlite3.connect("database.db")
-# thread_pool_executor = futures.ThreadPoolExecutor(max_workers=2)
+maxthreads = 2
+pool_sema = threading.Semaphore(value=maxthreads)
+
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -30,6 +32,8 @@ class App(customtkinter.CTk):
 
         self.acct_row_nums = []
         self.acct_deleted_values = []
+
+        self.threads_limit = 1
 
         self.db_device = DeviceDB()
         self.db_device.create_table()
@@ -153,19 +157,25 @@ class App(customtkinter.CTk):
         self.select_frame_by_name("home")
 
     def worker_thread(self, idx):
+        pool_sema.acquire()
         try:
             ld = LDPlayer(self.ldPlayer_dir)
             ld.start(idx)
-            time.sleep(60)
+            # time.sleep(20)
+            ld.list_packages(idx)
+            # time.sleep(5)
+            ld.quit(idx)
         except Exception as e:
             print("Error: Device {0}. Message:{1}".format(idx, e))
-    
+        finally:
+            pool_sema.release()
+
     def create_threads(self):
-        for device in self.devices_list:
-            print(f"starting device {device[0]}")
-            t = threading.Thread(target=self.worker_thread,args=(device[0],))
-            t.daemon = True
-            t.start()
+            for device in self.devices_list:
+                print(f"starting device {device[0]}")
+                t = threading.Thread(target=self.worker_thread,args=(device[0],))
+                t.daemon = True
+                t.start()
 
     def reload_device(self):
         self.device_table.destroy()

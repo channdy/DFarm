@@ -24,4 +24,13 @@ class LDPlayer():
     def start(self, idx):
         em = self.ld.emulators[idx]
         em.start(wait=False)
+        em.wait_to_started()
+    def quit(self, idx):
+        em = self.ld.emulators[idx]
+        em.quit()
+
+    def list_packages(self, idx):
+        em = self.ld.emulators[idx]
+        packages = em.list_packages()
+        print(packages)
 
