@@ -12,7 +12,7 @@ class DeviceDB():
         """ Create the table with given columns
         """
         try:
-            self.cur.execute('''CREATE TABLE IF NOT EXISTS device (id int, name text, status text, serial text, app_count int, location text)''')
+            self.cur.execute('''CREATE TABLE IF NOT EXISTS device (id int, name text, status text, serial text, app_count int, location text, enabled int)''')
             self.conn.commit()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
@@ -20,7 +20,7 @@ class DeviceDB():
     def insert_data(self, entities):
         """  Insert records into the table
         """
-        query = """INSERT INTO device(id, name, status, serial) VALUES (?,?,?,?)"""
+        query = """INSERT INTO device(id, name, status, serial, enabled) VALUES (?,?,?,?,?)"""
         try:
             self.cur.execute(query, entities)
             self.conn.commit()
@@ -31,29 +31,43 @@ class DeviceDB():
     def update_device(self, devices):
         """ Update the table with given new values"""
         try:
-            for key, value in devices.list_ldplayer().items():
-                print(key, value)
+            ld_list = []
+            device_list = devices.list_ldplayer()
+            for key, value in device_list.items():
+                # print(key, value)
+                ld_list.append(key)
                 self.cur.execute("SELECT * FROM device WHERE id = ?", (key,))
                 result = self.cur.fetchone()
-                # print(result)
                 if result is None:
-                    query = """INSERT INTO device(id, name, status, serial) VALUES (?,?,?,?)"""
+                    query = """INSERT INTO device(id, name, status, serial, enabled) VALUES (?,?,?,?,?)"""
                     try:
-                        self.cur.execute(query, (key, value["name"], value["status"], value["serial"],))
+                        self.cur.execute(query, (key, value["name"], value["status"], value["serial"], 1))
                         self.conn.commit()
                     except sqlite3.IntegrityError as e:
                         print("Error name:", e.sqlite_errorname)
                 else:                
-                    self.cur.execute("UPDATE device SET name = ?, status = ?, serial = ? WHERE id = ?", (value["name"], value["status"], value["serial"], key,))
+                    self.cur.execute("UPDATE device SET name = ?, status = ?, serial = ?, enabled = ? WHERE id = ?", (value["name"], value["status"], value["serial"], 1, key))
                     self.conn.commit()
+            # print(ld_list)
+            self.cur.execute("SELECT * FROM device")
+            rows = self.cur.fetchall()
+            for row in rows:
+                # print(row[0])
+                if row[0] not in ld_list:
+                    self.hide_device(row[0])
+
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)
+
+    def hide_device(self, idx):
+        self.cur.execute("UPDATE device SET enabled = ? WHERE id = ?", (0, idx))
+        self.conn.commit()
 
     def select_all(self):
         """Selects all rows from the table to display
         """
         try:
-            self.cur.execute('SELECT id, name, status, serial, app_count, location FROM device')
+            self.cur.execute('SELECT id, name, status, serial, app_count, location FROM device WHERE enabled=1')
             return self.cur.fetchall()
         except sqlite3.IntegrityError as e:
             print("Error name:", e.sqlite_errorname)

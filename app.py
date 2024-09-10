@@ -183,8 +183,8 @@ class App(customtkinter.CTk):
 
     def build_device_table(self):
         if self.ldPlayer_dir is not None:
-            if os.path.isdir(self.ldPlayer_dir[0]):
-                self.players = LDPlayer(self.ldPlayer_dir[0])
+            if os.path.isdir(self.ldPlayer_dir):
+                self.players = LDPlayer(self.ldPlayer_dir)
                 self.db_device.update_device(self.players)
         self.devices_list = self.db_device.select_all()
         device_table_data = [
@@ -223,9 +223,10 @@ class App(customtkinter.CTk):
         self.db_setting.insert_data(("ld_dir", ld_path))
 
     def update_table(self):
-        value = self.device_table.edit(1,1)
+        print("Update device")
+        # value = self.device_table.edit(1,1)
         # value = e = self.device_table.edit_row[row][col]
-        print(value)
+        # print(value)
         # rows = table.get_row(row)
         # print(rows)
 
