@@ -144,6 +144,8 @@ class App(customtkinter.CTk):
         self.account_table_frame = CTkXYFrame(self.account_frame, width=900)
         self.account_table_frame.grid(row=1, column=0, columnspan=10, padx=0, pady=0, sticky="nsew")
         
+        self.statusbar = customtkinter.CTkLabel(self, text="this is the statusbar", anchor="w")
+        self.statusbar.pack(side="bottom", fill="x")
 
         self.build_acct_table()
 
