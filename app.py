@@ -25,7 +25,7 @@ class App(customtkinter.CTk):
         super().__init__()
         
         self.title("DFarm Tool")
-        self.geometry("1600x700")
+        self.geometry("1700x700")
 
         self.device_row_nums = []
         self.device_deleted_values = []
@@ -144,8 +144,14 @@ class App(customtkinter.CTk):
         self.account_table_frame = CTkXYFrame(self.account_frame, width=900)
         self.account_table_frame.grid(row=1, column=0, columnspan=10, padx=0, pady=0, sticky="nsew")
         
-        self.statusbar = customtkinter.CTkLabel(self, text="this is the statusbar", anchor="w")
-        self.statusbar.pack(side="bottom", fill="x")
+
+        # self.statusbar = customtkinter.CTkLabel(self, text="this is the statusbar", anchor="w")
+        # self.statusbar.pack(side="bottom", fill="x")
+
+        self.footer_frame = customtkinter.CTkFrame(self.home_frame, fg_color="transparent", border_width=1, border_color="#3449eb")
+        self.footer_frame.grid(row=2, column=0, columnspan=3, padx=10, pady=(370,0), sticky="ew")
+        self.statusbar = customtkinter.CTkLabel(self.footer_frame, text="this is the statusbar", anchor="w")
+        self.statusbar.grid(row=0, column=0, padx=5, pady=5)
 
         self.build_acct_table()
 
